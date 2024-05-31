@@ -30,7 +30,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
         _simParams.generateUnitializedList().c_str());
     throw std::runtime_error("simulator not initialized");
   }
-
   // init LCM
   if (_simParams.sim_state_lcm) {
     printf("[Simulation] Setup LCM...\n");
@@ -40,7 +39,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
       throw std::runtime_error("lcm bad");
     }
   }
-
   // init quadruped info
   printf("[Simulation] Build quadruped...\n");
   _robot = robot;
@@ -49,7 +47,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   printf("[Simulation] Build actuator model...\n");
   _actuatorModels = _quadruped.buildActuatorModels();
   _window = window;
-
   // init graphics
   if (_window) {
     printf("[Simulation] Setup Cheetah graphics...\n");
@@ -62,7 +59,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
                              ? window->setupMiniCheetah(seColor, false, false)
                              : window->setupCheetah3(seColor, false, false);
   }
-
   // init rigid body dynamics
   printf("[Simulation] Build rigid body model...\n");
   _model = _quadruped.buildModel();
@@ -75,7 +71,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   for (u32 i = 0; i < 12; i++) {
     zero12[i] = 0.;
   }
-
   // set some sane defaults:
   _tau = zero12;
   _robotControllerState.q = zero12;
@@ -89,49 +84,7 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   x0.q = zero12;
   x0.qd = zero12;
 
-  // Mini Cheetah Initial Posture
-  // x0.bodyPosition[2] = -0.49;
-  // Cheetah 3
-  // x0.bodyPosition[2] = -0.34;
-  // x0.q[0] = -0.807;
-  // x0.q[1] = -1.2;
-  // x0.q[2] = 2.4;
-
-  // x0.q[3] = 0.807;
-  // x0.q[4] = -1.2;
-  // x0.q[5] = 2.4;
-
-  // x0.q[6] = -0.807;
-  // x0.q[7] = -1.2;
-  // x0.q[8] = 2.4;
-
-  // x0.q[9] = 0.807;
-  // x0.q[10] = -1.2;
-  // x0.q[11] = 2.4;
-
-  // Initial (Mini Cheetah stand)
-  // x0.bodyPosition[2] = -0.185;
-  // Cheetah 3
-  // x0.bodyPosition[2] = -0.075;
-
-  // x0.q[0] = -0.03;
-  // x0.q[1] = -0.79;
-  // x0.q[2] = 1.715;
-
-  // x0.q[3] = 0.03;
-  // x0.q[4] = -0.79;
-  // x0.q[5] = 1.715;
-
-  // x0.q[6] = -0.03;
-  // x0.q[7] = -0.72;
-  // x0.q[8] = 1.715;
-
-  // x0.q[9] = 0.03;
-  // x0.q[10] = -0.72;
-  // x0.q[11] = 1.715;
-
-  // Cheetah lies on the ground
-  //x0.bodyPosition[2] = -0.45;
+  // Mini Cheetah Initial Posture, lies on the ground
   x0.bodyPosition[2] = 0.05;
   x0.q[0] = -0.7;
   x0.q[1] = 1.;
@@ -148,11 +101,8 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   x0.q[9] = 0.7;
   x0.q[10] = -1.0;
   x0.q[11] = -2.715;
-
-
   setRobotState(x0);
   _robotDataSimulator->setState(x0);
-
   printf("[Simulation] Setup low-level control...\n");
   // init spine:
   if (_robot == RobotType::MINI_CHEETAH) {
@@ -177,29 +127,15 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   } else {
     assert(false);
   }
-
   // init shared memory
   printf("[Simulation] Setup shared memory...\n");
   _sharedMemory.createNew(DEVELOPMENT_SIMULATOR_SHARED_MEMORY_NAME, true);
   _sharedMemory().init();
-
-  // shared memory fields:
   _sharedMemory().simToRobot.robotType = _robot;
-  _window->_drawList._visualizationData =
-      &_sharedMemory().robotToSim.visualizationData;
-
+  _window->_drawList._visualizationData = &_sharedMemory().robotToSim.visualizationData;
   // load robot control parameters
   printf("[Simulation] Load control parameters...\n");
-  if (_robot == RobotType::MINI_CHEETAH) {
-    _robotParams.initializeFromYamlFile(getConfigDirectoryPath() +
-                                        MINI_CHEETAH_DEFAULT_PARAMETERS);
-  } else if (_robot == RobotType::CHEETAH_3) {
-    _robotParams.initializeFromYamlFile(getConfigDirectoryPath() +
-                                        CHEETAH_3_DEFAULT_PARAMETERS);
-  } else {
-    assert(false);
-  }
-
+  _robotParams.initializeFromYamlFile(getConfigDirectoryPath() + MINI_CHEETAH_DEFAULT_PARAMETERS);
   if (!_robotParams.isFullyInitialized()) {
     printf("Not all robot control parameters were initialized. Missing:\n%s\n",
            _robotParams.generateUnitializedList().c_str());
@@ -208,7 +144,6 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   // init IMU simulator
   printf("[Simulation] Setup IMU simulator...\n");
   _imuSimulator = new ImuSimulator<double>(_simParams);
-
   _simParams.unlockMutex();
   printf("[Simulation] Ready!\n");
 }
@@ -216,29 +151,21 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
 void Simulation::sendControlParameter(const std::string& name,
                                       ControlParameterValue value,
                                       ControlParameterValueKind kind, bool isUser) {
-  ControlParameterRequest& request =
-      _sharedMemory().simToRobot.controlParameterRequest;
-  ControlParameterResponse& response =
-      _sharedMemory().robotToSim.controlParameterResponse;
-
+  ControlParameterRequest& request = _sharedMemory().simToRobot.controlParameterRequest;
+  ControlParameterResponse& response = _sharedMemory().robotToSim.controlParameterResponse;
   // first check no pending message
   assert(request.requestNumber == response.requestNumber);
-
-  // new message
   request.requestNumber++;
-
   // message data
   request.requestKind = isUser ? ControlParameterRequestKind::SET_USER_PARAM_BY_NAME : ControlParameterRequestKind::SET_ROBOT_PARAM_BY_NAME;
   strcpy(request.name, name.c_str());
   request.value = value;
   request.parameterKind = kind;
   printf("%s\n", request.toString().c_str());
-
   // run robot:
   _robotMutex.lock();
   _sharedMemory().simToRobot.mode = SimulatorMode::RUN_CONTROL_PARAMETERS;
   _sharedMemory().simulatorIsDone();
-
   // wait for robot code to finish
   if (_sharedMemory().waitForRobotWithTimeout()) {
   } else {
@@ -247,16 +174,12 @@ void Simulation::sendControlParameter(const std::string& name,
     _robotMutex.unlock();
     return;
   }
-
-  //_sharedMemory().waitForRobot();
   _robotMutex.unlock();
-
   // verify response is good
   assert(response.requestNumber == request.requestNumber);
   assert(response.parameterKind == request.parameterKind);
   assert(std::string(response.name) == request.name);
 }
-
 /*!
  * Report a control error.  This doesn't throw and exception and will return so you can clean up
  */
@@ -270,14 +193,12 @@ void Simulation::handleControlError() {
       "[ERROR] Control code timed-out!\n");
     _errorCallback("Control code has stopped responding without giving an error message.\nIt has likely crashed - "
                    "check the output of the control code for more information");
-
   } else {
     printf("[ERROR] Control code has an error!\n");
     _errorCallback("Control code has an error:\n" + std::string(_sharedMemory().robotToSim.errorMessage));
   }
 
 }
-
 /*!
  * Called before the simulator is run the first time.  It's okay to put stuff in
  * here that blocks on having the robot connected.
@@ -287,9 +208,7 @@ void Simulation::firstRun() {
   _robotMutex.lock();
   _sharedMemory().simToRobot.mode = SimulatorMode::DO_NOTHING;
   _sharedMemory().simulatorIsDone();
-
   printf("[Simulation] Waiting for robot...\n");
-
   // this loop will check to see if the robot is connected at 10 Hz
   // doing this in a loop allows us to click the "stop" button in the GUI
   // and escape from here before the robot code connects, if needed
@@ -303,20 +222,17 @@ void Simulation::firstRun() {
   _connected = true;
   _uiUpdate();
   _robotMutex.unlock();
-
   // send all control parameters
   printf("[Simulation] Send robot control parameters to robot...\n");
   for (auto& kv : _robotParams.collection._map) {
     sendControlParameter(kv.first, kv.second->get(kv.second->_kind),
                          kv.second->_kind, false);
   }
-
   for (auto& kv : _userParams.collection._map) {
     sendControlParameter(kv.first, kv.second->get(kv.second->_kind),
                          kv.second->_kind, true);
   }
 }
-
 /*!
  * Take a single timestep of dt seconds
  */
@@ -326,7 +242,6 @@ void Simulation::step(double dt, double dtLowLevelControl, double dtHighLevelCon
     lowLevelControl();
     _timeOfNextLowLevelControl = _timeOfNextLowLevelControl + dtLowLevelControl;
   }
-
   // High level control
   if (_currentSimTime >= _timeOfNextHighLevelControl) {
 #ifndef DISABLE_HIGH_LEVEL_CONTROL
@@ -335,31 +250,15 @@ void Simulation::step(double dt, double dtLowLevelControl, double dtHighLevelCon
     _timeOfNextHighLevelControl =
         _timeOfNextHighLevelControl + dtHighLevelControl;
   }
-
   // actuator model:
-  if (_robot == RobotType::MINI_CHEETAH) {
-    for (int leg = 0; leg < 4; leg++) {
-      for (int joint = 0; joint < 3; joint++) {
-        _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(
-            _spineBoards[leg].torque_out[joint],
-            _simulator->getState().qd[leg * 3 + joint]);
-      }
+  for (int leg = 0; leg < 4; leg++) {
+    for (int joint = 0; joint < 3; joint++) {
+      _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(
+          _spineBoards[leg].torque_out[joint],
+          _simulator->getState().qd[leg * 3 + joint]);
     }
-  } else if (_robot == RobotType::CHEETAH_3) {
-    for (int leg = 0; leg < 4; leg++) {
-      for (int joint = 0; joint < 3; joint++) {
-        _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(
-            _tiBoards[leg].data->tau_des[joint],
-            _simulator->getState().qd[leg * 3 + joint]);
-      }
-    }
-  } else {
-    assert(false);
   }
-
-  // dynamics
   _currentSimTime += dt;
-
   // Set Homing Information
   RobotHomingInfo<double> homing;
   homing.active_flag = _simParams.go_home;
@@ -370,12 +269,9 @@ void Simulation::step(double dt, double dtLowLevelControl, double dtHighLevelCon
   homing.kp_ang = _simParams.home_kp_ang;
   homing.kd_ang = _simParams.home_kd_ang;
   _simulator->setHoming(homing);
-
   _simulator->step(dt, _tau, _simParams.floor_kp, _simParams.floor_kd);
 }
-
 void Simulation::lowLevelControl() {
-  if (_robot == RobotType::MINI_CHEETAH) {
     // update spine board data:
     for (int leg = 0; leg < 4; leg++) {
       _spiData.q_abad[leg] = _simulator->getState().q[leg * 3 + 0];
@@ -386,77 +282,38 @@ void Simulation::lowLevelControl() {
       _spiData.qd_hip[leg] = _simulator->getState().qd[leg * 3 + 1];
       _spiData.qd_knee[leg] = _simulator->getState().qd[leg * 3 + 2];
     }
-
     // run spine board control:
     for (auto& spineBoard : _spineBoards) {
       spineBoard.run();
     }
-
-  } else if (_robot == RobotType::CHEETAH_3) {
-    // update data
-    for (int leg = 0; leg < 4; leg++) {
-      for (int joint = 0; joint < 3; joint++) {
-        _tiBoards[leg].data->q[joint] =
-            _simulator->getState().q[leg * 3 + joint];
-        _tiBoards[leg].data->dq[joint] =
-            _simulator->getState().qd[leg * 3 + joint];
-      }
-    }
-
-    // run control
-    for (auto& tiBoard : _tiBoards) {
-      tiBoard.run_ti_board_iteration();
-    }
-  } else {
-    assert(false);
-  }
 }
-
-
-
 void Simulation::highLevelControl() {
   // send joystick data to robot:
   _sharedMemory().simToRobot.gamepadCommand = _window->getDriverCommand();
-  _sharedMemory().simToRobot.gamepadCommand.applyDeadband(
-      _simParams.game_controller_deadband);
-
+  _sharedMemory().simToRobot.gamepadCommand.applyDeadband(_simParams.game_controller_deadband);
+  //printf("%s\n", _sharedMemory().simToRobot.gamepadCommand.toString().c_str());
   // send IMU data to robot:
   _imuSimulator->updateCheaterState(_simulator->getState(),
                                     _simulator->getDState(),
                                     _sharedMemory().simToRobot.cheaterState);
-
   _imuSimulator->updateVectornav(_simulator->getState(),
                                    _simulator->getDState(),
                                    &_sharedMemory().simToRobot.vectorNav);
-
-
   // send leg data to robot
-  if (_robot == RobotType::MINI_CHEETAH) {
-    _sharedMemory().simToRobot.spiData = _spiData;
-  } else if (_robot == RobotType::CHEETAH_3) {
-    for (int i = 0; i < 4; i++) {
-      _sharedMemory().simToRobot.tiBoardData[i] = *_tiBoards[i].data;
-    }
-  } else {
-    assert(false);
-  }
-
+  _sharedMemory().simToRobot.spiData = _spiData;
   // signal to the robot that it can start running
   // the _robotMutex is used to prevent qt (which runs in its own thread) from
   // sending a control parameter while the robot code is already running.
   _robotMutex.lock();
   _sharedMemory().simToRobot.mode = SimulatorMode::RUN_CONTROLLER;
   _sharedMemory().simulatorIsDone();
-
   // wait for robot code to finish (and send LCM while waiting)
   if (_lcm) {
     buildLcmMessage();
     _lcm->publish(SIM_LCM_NAME, &_simLCM);
   }
-
   // first make sure we haven't killed the robot code
   if (_wantStop) return;
-
   // next try waiting at most 1 second:
   if (_sharedMemory().waitForRobotWithTimeout()) {
   } else {
@@ -465,22 +322,8 @@ void Simulation::highLevelControl() {
     return;
   }
   _robotMutex.unlock();
-
   // update
-  if (_robot == RobotType::MINI_CHEETAH) {
-    _spiCommand = _sharedMemory().robotToSim.spiCommand;
-
-    // pretty_print(_spiCommand.q_des_abad, "q des abad", 4);
-    // pretty_print(_spiCommand.q_des_hip, "q des hip", 4);
-    // pretty_print(_spiCommand.q_des_knee, "q des knee", 4);
-  } else if (_robot == RobotType::CHEETAH_3) {
-    for (int i = 0; i < 4; i++) {
-      _tiBoards[i].command = _sharedMemory().robotToSim.tiBoardCommand[i];
-    }
-  } else {
-    assert(false);
-  }
-
+  _spiCommand = _sharedMemory().robotToSim.spiCommand;
   _highLevelIterations++;
 }
 
@@ -663,22 +506,18 @@ void Simulation::loadTerrainFile(const std::string& terrainFileName,
     printf("[ERROR] could not open yaml file for terrain\n");
     throw std::runtime_error("yaml bad");
   }
-
   std::vector<std::string> keys = paramHandler.getKeys();
-
   for (auto& key : keys) {
     auto load = [&](double& val, const std::string& name) {
       if (!paramHandler.getValue<double>(key, name, val))
         throw std::runtime_error("terrain read bad: " + key + " " + name);
     };
-
     auto loadVec = [&](double& val, const std::string& name, size_t idx) {
       std::vector<double> v;
       if (!paramHandler.getVector<double>(key, name, v))
         throw std::runtime_error("terrain read bad: " + key + " " + name);
       val = v.at(idx);
     };
-
     auto loadArray = [&](double* val, const std::string& name, size_t idx) {
       std::vector<double> v;
       if (!paramHandler.getVector<double>(key, name, v))
@@ -686,7 +525,6 @@ void Simulation::loadTerrainFile(const std::string& terrainFileName,
       assert(v.size() == idx);
       for (size_t i = 0; i < idx; i++) val[i] = v[i];
     };
-
     printf("terrain element %s\n", key.c_str());
     std::string typeName;
     paramHandler.getString(key, "type", typeName);
@@ -732,21 +570,16 @@ void Simulation::loadTerrainFile(const std::string& terrainFileName,
       loadArray(pos, "position", 3);
       loadArray(ori, "orientation", 3);
       load(transparent, "transparent");
-
       Mat3<double> R = ori::rpyToRotMat(Vec3<double>(ori));
       Vec3<double> pOff(pos);
       R.transposeInPlace();  // "graphics" rotation matrix
-
       size_t steps = (size_t)stepsDouble;
-
       double heightOffset = rise / 2;
       double runOffset = run / 2;
       for (size_t step = 0; step < steps; step++) {
         Vec3<double> p(runOffset, 0, heightOffset);
         p = R * p + pOff;
-
         addCollisionBox(mu, resti, run, width, heightOffset * 2, p, R, addGraphics, transparent != 0.);
-
         heightOffset += rise / 2;
         runOffset += run;
       }
