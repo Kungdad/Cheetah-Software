@@ -320,8 +320,7 @@ void Simulation::firstRun() {
 /*!
  * Take a single timestep of dt seconds
  */
-void Simulation::step(double dt, double dtLowLevelControl,
-                      double dtHighLevelControl) {
+void Simulation::step(double dt, double dtLowLevelControl, double dtHighLevelControl) {
   // Low level control (if needed)
   if (_currentSimTime >= _timeOfNextLowLevelControl) {
     lowLevelControl();
@@ -746,8 +745,7 @@ void Simulation::loadTerrainFile(const std::string& terrainFileName,
         Vec3<double> p(runOffset, 0, heightOffset);
         p = R * p + pOff;
 
-        addCollisionBox(mu, resti, run, width, heightOffset * 2, p, R,
-                        addGraphics, transparent != 0.);
+        addCollisionBox(mu, resti, run, width, heightOffset * 2, p, R, addGraphics, transparent != 0.);
 
         heightOffset += rise / 2;
         runOffset += run;

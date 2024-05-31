@@ -21,9 +21,7 @@
  * @param period : how often to run
  * @param name : name of task
  */
-PeriodicTask::PeriodicTask(PeriodicTaskManager* taskManager, float period,
-                           std::string name)
-    : _period(period), _name(name) {
+PeriodicTask::PeriodicTask(PeriodicTaskManager* taskManager, float period, std::string name) : _period(period), _name(name) {
   taskManager->addTask(this);
 }
 
