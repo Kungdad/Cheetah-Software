@@ -260,15 +260,17 @@ void Graphics3D::keyPressEvent(QKeyEvent *e) {
     _targetSpeed *= 2.f;
   }
   if (e->key() == Qt::Key_W)
-    _freeCamMove[2] = _targetSpeed;
+    //_freeCamMove[2] = _targetSpeed;
+  {_driverCommand.leftStickAnalog=Vec2<float>(0,1);}
   else if (e->key() == Qt::Key_S)
-    _freeCamMove[2] = -_targetSpeed;
-
+    //_freeCamMove[2] = -_targetSpeed;
+  {_driverCommand.leftStickAnalog=Vec2<float>(0,-1);}
   if (e->key() == Qt::Key_A)
-    _freeCamMove[0] = _targetSpeed;
+    //_freeCamMove[0] = _targetSpeed;
+  {_driverCommand.leftStickAnalog=Vec2<float>(-0.2,0);}
   else if (e->key() == Qt::Key_D)
-    _freeCamMove[0] = -_targetSpeed;
-
+    //_freeCamMove[0] = -_targetSpeed;
+  {_driverCommand.leftStickAnalog=Vec2<float>(0.2,0);}
   if (e->key() == Qt::Key_R)
     _freeCamMove[1] = -_targetSpeed;
   else if (e->key() == Qt::Key_F)
@@ -316,17 +318,18 @@ void Graphics3D::keyReleaseEvent(QKeyEvent *e) {
   } else if (e->key() == Qt::Key_Space) {
     _rotOrig = !_rotOrig;
   }
-
   if (e->key() == Qt::Key_W)
-    _freeCamMove[2] = 0;
+    //_freeCamMove[2] = 0;
+  {_driverCommand.leftStickAnalog=Vec2<float>(0,0);}
   else if (e->key() == Qt::Key_S)
-    _freeCamMove[2] = 0;
-
+    //_freeCamMove[2] = 0;
+  {_driverCommand.leftStickAnalog=Vec2<float>(0,0);}
   if (e->key() == Qt::Key_A)
-    _freeCamMove[0] = 0;
+    //_freeCamMove[0] = 0;
+  {_driverCommand.leftStickAnalog=Vec2<float>(0,0);}
   else if (e->key() == Qt::Key_D)
-    _freeCamMove[0] = 0;
-
+    //_freeCamMove[0] = 0;
+  {_driverCommand.leftStickAnalog=Vec2<float>(0,0);}
   if (e->key() == Qt::Key_R)
     _freeCamMove[1] = 0;
   else if (e->key() == Qt::Key_F)
