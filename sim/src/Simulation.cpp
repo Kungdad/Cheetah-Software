@@ -167,12 +167,18 @@ void Simulation::sendControlParameter(const std::string& name,
   _sharedMemory().simToRobot.mode = SimulatorMode::RUN_CONTROL_PARAMETERS;
   _sharedMemory().simulatorIsDone();
   // wait for robot code to finish
-  if (_sharedMemory().waitForRobotWithTimeout()) {
-  } else {
-    handleControlError();
-    request.requestNumber = response.requestNumber; // so if we come back we won't be off by 1
-    _robotMutex.unlock();
-    return;
+  // if (_sharedMemory().waitForRobotWithTimeout()) {
+  // } else {
+  //   handleControlError();
+  //   request.requestNumber = response.requestNumber; // so if we come back we won't be off by 1
+  //   _robotMutex.unlock();
+  //   return;
+  // }
+  while (!_sharedMemory().tryWaitForRobot()) {
+    if (_wantStop) {
+      return;
+    }
+    usleep(100000);
   }
   _robotMutex.unlock();
   // verify response is good
@@ -315,11 +321,17 @@ void Simulation::highLevelControl() {
   // first make sure we haven't killed the robot code
   if (_wantStop) return;
   // next try waiting at most 1 second:
-  if (_sharedMemory().waitForRobotWithTimeout()) {
-  } else {
-    handleControlError();
-    _robotMutex.unlock();
-    return;
+  // if (_sharedMemory().waitForRobotWithTimeout()) {
+  // } else {
+  //   handleControlError();
+  //   _robotMutex.unlock();
+  //   return;
+  // }
+  while (!_sharedMemory().tryWaitForRobot()) {
+    if (_wantStop) {
+      return;
+    }
+    usleep(100000);
   }
   _robotMutex.unlock();
   // update
