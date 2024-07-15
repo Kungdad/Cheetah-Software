@@ -271,6 +271,10 @@ void Graphics3D::keyPressEvent(QKeyEvent *e) {
   else if (e->key() == Qt::Key_D)
     //_freeCamMove[0] = -_targetSpeed;
   {_driverCommand.leftStickAnalog=Vec2<float>(0.2,0);}
+  if (e->key() == Qt::Key_J)
+  {
+    _driverCommand.a=true;
+  }
   if (e->key() == Qt::Key_R)
     _freeCamMove[1] = -_targetSpeed;
   else if (e->key() == Qt::Key_F)
@@ -348,7 +352,10 @@ void Graphics3D::keyReleaseEvent(QKeyEvent *e) {
   if(e->key() == Qt::Key_T) {
     _turbo = false;
   }
-
+  if (e->key() == Qt::Key_J)
+  {
+    _driverCommand.a=false;
+  }
   if(e->key() == Qt::Key_P) {
     _sloMo = false;
   }
